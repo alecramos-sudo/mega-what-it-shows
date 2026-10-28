@@ -1,0 +1,65 @@
+---
+layout: runbook
+title: '#4471 · three problems, not one'
+owner: Alec Ramos
+status: open
+reviewed: 2026-10-28
+signature: v1.eyJzdWIiOiI4MTc1IiwiYXVkIjoiY2hhbGxlbmdlOndoYXQtaXQtc2hvd3MiLCJpYXQiOjE3OTMxNjAzNjMsImV4cCI6MTc5MzI0Njc2M30.H-LqclCU5Cg4P2rtC-MJnAde8b-EiItFPaa1xBWXDNg
+---
+
+<script>
+  import ProblemTable from '#lib/kb/ProblemTable.svelte';
+  import Callout from '#lib/kb/Callout.svelte';
+  import RenderStamp from '#lib/kb/RenderStamp.svelte';
+</script>
+
+[#4471](/kb/incidents/4471) was merged on subject lines and marked known: one bug, one fix queued.
+Read by what each report describes and which tenant sent it, the ticket holds three problems with
+three different fixes. The queued parser fix closes only the first.
+
+<Callout kind="warn">
+Shipping the parser fix and closing #4471 leaves two bugs live: the booking-v3 date hint and a
+one-day timezone shift. Each now has its own ticket.
+</Callout>
+
+## The split
+
+<ProblemTable
+  ticket={4471}
+  tickets={{
+    parser: 'https://github.com/alecramos-sudo/mega-what-it-shows/issues/1',
+    hint: 'https://github.com/alecramos-sudo/mega-what-it-shows/issues/2',
+    shift: 'https://github.com/alecramos-sudo/mega-what-it-shows/issues/3',
+  }}
+/>
+
+- **`parser`**: the shared parser reads every date month first, and every tenant on file writes
+  the day first. "Booked for 2 July. The invite says 7 February." Fix: parse in the tenant's locale.
+- **`hint`**: the booking-v3 form prints `MM/DD/YYYY` under its date field. People type month first,
+  as told, and the form reads the date day first. The parser fix does not touch it. Fix: print the
+  hint from the tenant's locale.
+- **`shift`**: the date moves by one day, not by a swap. "Client in Lisbon got Tuesday. Client in
+  Toronto got Monday. Same meeting." That is timezone handling, not parsing. Fix: keep booking dates
+  as calendar dates, not midnight instants.
+
+## How a report is placed
+
+1. One id, one report. The export repeats some ids across overlapping pages; each counts once.
+2. `shift`: the reports the desk itself read as a one-day move (`desk-notes.json`). No day/month
+   swap fits any of them.
+3. `hint` and `parser`: by tenant, as `causes.ts` already does. A day-first tenant's report through
+   the booking-v3 form is `hint`; any other report from a day-first tenant is `parser`.
+
+Intake's tag is a guess from the reporter's browser. The column above shows how often it disagrees
+with the tenant; the tenant decides.
+
+## Why the ticket hid them
+
+- [Decision 0001](/kb/decisions/0001-dedupe-by-subject) merges on subject alone. Subjects like
+  "Date is wrong" fit all three bugs, so all three landed in one ticket.
+- The #4471 cause table already showed `hint` as a second cause and footnoted the one-day moves
+  inside `parser`. The page above it said "one issue", so neither got a ticket.
+- Decision 0001 was last reviewed in June 2024. It needs a replacing record: merge on cause, not
+  subject. Its deciders should write it; this page does not edit it.
+
+<RenderStamp {signature} />

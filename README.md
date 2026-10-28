@@ -34,3 +34,10 @@ Support desk. Decision records: whoever signed them.
 ---
 
 Exported 2026-10-04 from the `support` repo, `apps/kb/` → `src/`.
+
+## Build
+
+The export shipped `src/` only. `vite.config.js` and `package.json` add the smallest SvelteKit 3 +
+mdsvex build that renders it: `npm install && npm run build` writes the static site to `build/`.
+`build/` is committed so each page can be read as the desk sees it, e.g.
+`build/kb/incidents/4471-split.html` for [#4471 split](src/routes/kb/incidents/4471-split/+page.svx).
